@@ -17,12 +17,14 @@ control_msg = Turtlecontrol()
 def pose_callback(data):
 	global pos_msg
 	#convert x to cm
-	pos_msg.x = data.x *100
+	pos_msg.x = data.x
+	#print('pose callback:',pos_msg, data)
 	
 def control_gain(data):
 	global control_msg
 	control_msg.kp = data.kp
 	control_msg.xd = data.xd
+	#print('control callback:',data,control_msg)
 
 
 if __name__ == '__main__':
@@ -33,15 +35,17 @@ if __name__ == '__main__':
 	rospy.Subscriber('/turtle1/control_params', Turtlecontrol, control_gain)
 
 	# add a publisher with a new topic using the Turtlecontrol message
-	pos_pub = rospy.Publisher('/turtle1/pose', Pose, queue_size = 10)
+	cmd_pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size = 10)
 	# set a 10Hz frequency for this loop
 	loop_rate = rospy.Rate(10)
 	vel_cmd = Twist()
 	
 	while not rospy.is_shutdown():
 		# publish the message
-		pos_pub.publish(pos_msg)
+		print('main loop:',pos_msg,control_msg)
+		
 		vel_cmd.linear.x = control_msg.kp*(control_msg.xd-pos_msg.x)
+		cmd_pub.publish(vel_cmd)
 		# wait for 0.1 seconds until the next loop and repeat
 		loop_rate.sleep()
 	
